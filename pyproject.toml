@@ -2,11 +2,13 @@
 name = "openevolve-rag-retrieval"
 version = "0.1.0"
 description = "Evolving a RAG retriever on BEIR SciFact with OpenEvolve"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "beir>=2.2.0",
     "ipython>=8.18.1",
     "openai>=2.48.0",
+    "openevolve>=0.4.1",
     "python-dotenv>=1.2.1",
     "rank-bm25>=0.2.2",
+    "requests>=2.34.2",
 ]
