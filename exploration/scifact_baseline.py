@@ -5,6 +5,8 @@ BM25 baseline — before any LLM or OpenEvolve gets involved.
 Run with: .venv/bin/python exploration/scifact_baseline.py
 """
 
+import time
+
 from beir import util
 from beir.datasets.data_loader import GenericDataLoader
 from beir.retrieval.evaluation import EvaluateRetrieval
@@ -78,12 +80,17 @@ def main():
     corpus, queries, qrels = load_scifact(split="train")
     inspect(corpus, queries, qrels)
 
+    start = time.perf_counter()
     results = retrieve(corpus, queries)
+    elapsed = time.perf_counter() - start
+    latency_ms_per_query = elapsed / len(queries) * 1000
+
     evaluator = EvaluateRetrieval()
     ndcg, _map, recall, precision = evaluator.evaluate(qrels, results, k_values=[10])
     print("\nbaseline scores (train split):")
     print(ndcg)
     print(recall)
+    print(f"latency: {latency_ms_per_query:.3f} ms/query ({elapsed:.2f}s total, {len(queries)} queries)")
 
 
 if __name__ == "__main__":

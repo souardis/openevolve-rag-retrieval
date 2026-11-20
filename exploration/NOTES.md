@@ -19,7 +19,10 @@
 
 - `NDCG@10 = 0.58992`
 - `Recall@10 = 0.72015`
+- `BASELINE_LATENCY_MS = 9.386` ms/query (7.59s total over 809 queries, measured with `time.perf_counter()` around the `retrieve()` call — wall-clock, single run, no repeated trials, on this laptop at the time of measurement)
 - (on the **train** split — see caveat below)
+
+This `BASELINE_LATENCY_MS` is the fixed speed reference point Lab B's fitness formula compares every evolved candidate against (`speed_ratio = BASELINE_LATENCY_MS / candidate_latency_ms`). It's a laptop wall-clock measurement, not an isolated/averaged-over-many-runs benchmark — noisy by production standards, but consistent enough for comparing programs run sequentially on the same machine, which is all this needs.
 
 ## Sanity check against the literature
 
