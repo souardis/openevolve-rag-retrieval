@@ -1,0 +1,85 @@
+# Lab B — quality + latency fitness (combined_score = nDCG@10 + 0.05 * speed_term).
+# Identical to Lab A's config except the header, logger_prefix, paths, one
+# sentence in the system prompt telling the LLM that speed is rewarded, and
+# evaluator.timeout (3x, because Lab B's evaluator times retrieve() 3 times).
+#
+# Run from the repo root:
+#   uv run --env-file .env openevolve-run \
+#     openevolve_task/initial_program.py \
+#     openevolve_task/lab_quality_latency/evaluator.py \
+#     --config openevolve_task/lab_quality_latency/config.yaml \
+#     --output openevolve_task/lab_quality_latency/openevolve_output \
+#     --iterations 5
+#
+# Why `--output` is mandatory: config.yaml has no output-dir field. Without the
+# flag, OpenEvolve writes to `<dirname(initial_program)>/openevolve_output`,
+# and both labs share initial_program.py, so Lab A and Lab B would write to
+# the SAME directory (openevolve_task/openevolve_output). Checkpoints, best/
+# and logs/ all live under --output. (Checked against openevolve 0.4.1:
+# controller.py, cli.py.)
+#
+# Why `--env-file .env`: OpenEvolve resolves "${VAR}" from os.environ while it
+# parses this file, before evaluator.py is ever imported, so loading
+# python-dotenv inside the evaluator would be too late. uv's --env-file loads
+# the keys into the process environment without printing them.
+
+max_iterations: 200          # overridden by --iterations for smoke tests
+checkpoint_interval: 10
+log_level: INFO
+logger_prefix: lab_b         # tells Lab A and Lab B log lines apart
+random_seed: 42
+language: python
+
+llm:
+  # Same ensemble as Lab A, so the models are not a difference between the labs.
+  models:
+    - name: claude-haiku-5-5
+      weight: 0.85
+      api_base: https://api.anthropic.com/v1/
+      api_key: ${ANTHROPIC_API_KEY}
+    - name: deepseek-v4-pro
+      weight: 0.15
+      api_base: https://api.deepseek.com
+      api_key: ${DEEPSEEK_API_KEY}
+  evaluator_models: []       # no LLM-as-judge; fitness comes only from BEIR
+  temperature: 0.7
+  max_tokens: 4096
+  timeout: 120
+  retries: 3
+  retry_delay: 5
+
+prompt:
+  system_message: |
+    You are an expert in information retrieval improving a lexical retriever
+    for BEIR SciFact (scientific claims -> PubMed abstracts that support or
+    refute them). The function `retrieve(corpus, queries) -> {qid: {doc_id: score}}`
+    is scored by nDCG@10 against human relevance judgments. Only code inside
+    the EVOLVE block may change. Keep the signature and return format, return
+    at most 100 docs per query, and return an entry for every query. Use
+    only pure computation with the Python standard library, numpy and
+    rank_bm25: no file I/O, no os/sys/pathlib, no network, no pretrained
+    models, no dynamic imports or eval/exec. Programs that use any of these
+    are rejected with a score of 0 before they run. Speed also counts: the
+    score adds a bonus of up to +0.05 for running up to 2x faster than the
+    starting program (latency_ms_per_query) and the same penalty for up to 2x slower.
+  num_top_programs: 3
+  num_diverse_programs: 2
+
+database:
+  population_size: 200
+  archive_size: 50
+  num_islands: 3
+  migration_interval: 20
+  migration_rate: 0.1
+  feature_dimensions: ["complexity", "diversity"]
+  feature_bins: 10
+
+evaluator:
+  timeout: 360               # Lab A's 120s x 3 timed repeats, so both labs kill at the same per-run slowness
+  max_retries: 1
+  cascade_evaluation: false  # single-stage evaluate(); no evaluate_stage1/2
+  parallel_evaluations: 1    # sequential, so the reported latency isn't skewed by CPU contention
+  use_llm_feedback: false
+
+diff_based_evolution: true
+max_code_length: 10000
