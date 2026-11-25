@@ -24,6 +24,17 @@
 
 This `BASELINE_LATENCY_MS` is the fixed speed reference point Lab B's fitness formula compares every evolved candidate against (`speed_ratio = BASELINE_LATENCY_MS / candidate_latency_ms`). It's a laptop wall-clock measurement, not an isolated/averaged-over-many-runs benchmark — noisy by production standards, but consistent enough for comparing programs run sequentially on the same machine, which is all this needs.
 
+### Re-measured under OpenEvolve (2026-11-25): `BASELINE_LATENCY_MS = 9.71`
+
+The Phase 1 number above is a single standalone run. Lab B compares candidates timed *inside* OpenEvolve, so the reference was re-measured the same way: Lab B's evaluator (median of 3 timed `retrieve()` calls per evaluation) on the unmodified `initial_program.py`, nothing else running.
+
+| Path | 5 evaluations (ms/query) |
+|---|---|
+| Main process (`openevolve-run --iterations 0`, how the starting program is scored) | 9.66, 9.70, 9.54, 9.72, 9.78 |
+| Spawned worker process with OpenEvolve's `Evaluator` (how every candidate is scored) | 9.68, 9.81, 9.61, 9.79, 9.76 |
+
+Median of all 10: **9.71 ms/query** (range 9.54-9.81, so ±1.4%). The two paths agree, so a worker process adds no measurable overhead. The 10.67 ms seen in the first Lab B smoke run (2026-11-20, started right after Lab A's run) was an outlier, not systematic overhead. With 9.386 the unmodified baseline scored about -0.0025 in Lab B; with 9.71 it scores ~0, as designed.
+
 ## Sanity check against the literature
 
 Published BEIR results for plain BM25 on `scifact` are typically in the ~0.60-0.70 nDCG@10 range. 0.59 is close enough to confirm the harness (tokenization, id bookkeeping, BEIR evaluation call) is correct, not a bug.

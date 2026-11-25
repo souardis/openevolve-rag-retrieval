@@ -60,8 +60,9 @@ prompt:
     rank_bm25: no file I/O, no os/sys/pathlib, no network, no pretrained
     models, no dynamic imports or eval/exec. Programs that use any of these
     are rejected with a score of 0 before they run. Speed also counts: the
-    score adds a bonus of up to +0.05 for running up to 2x faster than the
-    starting program (latency_ms_per_query) and the same penalty for up to 2x slower.
+    score adds about +0.0167 for every 2x speed-up over the starting program
+    (latency_ms_per_query), up to +0.05 at 8x faster, and the same penalty
+    for slowdowns, down to -0.05 at 8x slower.
   num_top_programs: 3
   num_diverse_programs: 2
 

@@ -62,8 +62,8 @@ FORBIDDEN_PATTERNS = [
 # ---------------------------------------------------------------------------
 # THE PART THAT MAKES THIS LAB B. Everything else in this file is Lab A's code.
 #
-# Design (plan, Phase 2, step 5, with the clip changed to log2, see below):
-#   speed_term     = clip(log2(BASELINE_LATENCY_MS / latency_ms), -1, 1)
+# Design (plan, Phase 2, step 5, with log2 and a wider cap, see below):
+#   speed_term     = clip(log2(BASELINE_LATENCY_MS / latency_ms), -CAP, CAP) / CAP
 #   combined_score = ndcg_at_10 + LATENCY_WEIGHT * speed_term
 # combined_score always stays within ndcg_at_10 +/- LATENCY_WEIGHT.
 #
@@ -71,13 +71,24 @@ FORBIDDEN_PATTERNS = [
 # caps at 2x faster, but 2x slower costs only -0.5 and 10x slower -0.9, so an
 # expensive add-on (query expansion, a second scoring pass) that buys +0.03
 # nDCG@10 would win even at 3x slower. log2 makes 2x faster and 2x slower
-# equal and opposite (+1 / -1).
+# equal and opposite.
+#
+# Why CAP = 3 doublings (8x) and not 1 (2x): in the 5-iteration smoke test
+# (2026-11-20) Lab B reached 15x faster by iteration 4 (an inverted index).
+# With a 2x cap every later candidate gets the same full bonus, so Lab B
+# stops rewarding speed and optimizes the same thing as Lab A for the rest of
+# the run. Dividing by CAP keeps the total at +/-LATENCY_WEIGHT, so speed can
+# never outweigh more than 0.05 nDCG@10.
 # ---------------------------------------------------------------------------
-# Unmodified initial_program.py on scifact/train, measured on this laptop (exploration/NOTES.md).
-BASELINE_LATENCY_MS = 9.386
-LATENCY_WEIGHT = 0.05  # 2x faster than baseline = +0.05 nDCG@10, 2x slower = -0.05
+# Unmodified initial_program.py on scifact/train, measured the way OpenEvolve measures
+# candidates: median of 10 evaluations (5 main-process, 5 in a spawned worker), each
+# itself a median of TIMING_REPEATS runs (exploration/NOTES.md). The Phase 1
+# standalone number was 9.386, which would give the baseline a -0.0025 penalty.
+BASELINE_LATENCY_MS = 9.71
+LATENCY_WEIGHT = 0.05  # max bonus/penalty: >= 8x faster = +0.05 nDCG@10, >= 8x slower = -0.05
+SPEED_CAP_DOUBLINGS = 3  # CAP above: each 2x faster/slower is worth +/-0.05 / 3 = 0.0167
 MIN_LATENCY_MS = 1e-6  # floor: an instant candidate (returns {}) must not divide by zero
-# Single runs of the baseline vary 9.1-9.6 ms/query (~+/-0.002 combined_score).
+# Single runs of the baseline vary 9.1-9.8 ms/query (~+/-0.001 combined_score).
 # The median of 3 damps that, at ~2x extra evaluation time.
 TIMING_REPEATS = 3
 
@@ -85,10 +96,13 @@ TIMING_REPEATS = 3
 def fitness(ndcg_10: float, latency_ms: float) -> float:
     """Lab B's combined_score: nDCG@10 plus a bounded bonus/penalty for speed vs. baseline.
 
-    speed_term: +1 at >= 2x faster, 0 at baseline speed, -1 at >= 2x slower.
+    speed_term: +1 at >= 8x faster, +1/3 at 2x faster, 0 at baseline speed,
+    -1/3 at 2x slower, -1 at >= 8x slower.
     """
     speed_ratio = BASELINE_LATENCY_MS / max(latency_ms, MIN_LATENCY_MS)
-    speed_term = max(-1.0, min(1.0, math.log2(speed_ratio)))
+    doublings = math.log2(speed_ratio)
+    cap = SPEED_CAP_DOUBLINGS
+    speed_term = max(-cap, min(cap, doublings)) / cap
     return ndcg_10 + LATENCY_WEIGHT * speed_term
 
 
