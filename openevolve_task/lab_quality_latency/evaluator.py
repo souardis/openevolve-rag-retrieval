@@ -73,8 +73,11 @@ FORBIDDEN_PATTERNS = [
 # nDCG@10 would win even at 3x slower. log2 makes 2x faster and 2x slower
 # equal and opposite (+1 / -1).
 # ---------------------------------------------------------------------------
-# Unmodified initial_program.py on scifact/train, measured on this laptop (exploration/NOTES.md).
-BASELINE_LATENCY_MS = 9.386
+# Unmodified initial_program.py on scifact/train, measured the way OpenEvolve measures
+# candidates: median of 10 evaluations (5 main-process, 5 in a spawned worker), each
+# itself a median of TIMING_REPEATS runs (exploration/NOTES.md). The Phase 1
+# standalone number was 9.386, which would give the baseline a -0.0025 penalty.
+BASELINE_LATENCY_MS = 9.71
 LATENCY_WEIGHT = 0.05  # 2x faster than baseline = +0.05 nDCG@10, 2x slower = -0.05
 MIN_LATENCY_MS = 1e-6  # floor: an instant candidate (returns {}) must not divide by zero
 # Single runs of the baseline vary 9.1-9.6 ms/query (~+/-0.002 combined_score).
