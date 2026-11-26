@@ -1,0 +1,15 @@
+{
+  "id": "881e8cab-d319-46c5-93fe-1b88c9aa2d63",
+  "generation": 9,
+  "iteration": 170,
+  "timestamp": 1795709821.772274,
+  "parent_id": "f607d8be-f0b8-4b01-8b79-3bb475f78aef",
+  "metrics": {
+    "ndcg_at_10": 0.69284,
+    "recall_at_10": 0.80602,
+    "latency_ms_per_query": 24.84414925826403,
+    "combined_score": 0.69284
+  },
+  "language": "python",
+  "saved_at": 1795710645.371947
+}
