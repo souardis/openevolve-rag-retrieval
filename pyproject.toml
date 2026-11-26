@@ -12,3 +12,8 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "requests>=2.34.2",
 ]
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.10.9",
+]

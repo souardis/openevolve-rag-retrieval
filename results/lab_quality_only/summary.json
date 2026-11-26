@@ -1,0 +1,43 @@
+{
+  "iterations": 200,
+  "succeeded": 175,
+  "failed": 25,
+  "failures_by_error": {
+    "No valid diffs found in response": 25
+  },
+  "failed_at_max_tokens": 25,
+  "max_completion_tokens_seen": 4096,
+  "successful_programs_by_model": {
+    "pruned from database": 40,
+    "claude-haiku-5-5": 135
+  },
+  "baseline_in_run": {
+    "id": "c08abb15-405f-46d0-90e2-a152c7bbae3a",
+    "ndcg_at_10": 0.5899,
+    "recall_at_10": 0.7201,
+    "latency_ms_per_query": 9.5915,
+    "combined_score": 0.5899
+  },
+  "best": {
+    "iteration": 170,
+    "generation": 9,
+    "id": "881e8cab-d319-46c5-93fe-1b88c9aa2d63",
+    "ndcg_at_10": 0.69284,
+    "recall_at_10": 0.80602,
+    "latency_ms_per_query": 24.84414925826403,
+    "combined_score": 0.69284
+  },
+  "milestones": {
+    "first_ndcg_ge_0.65": 1,
+    "first_ndcg_ge_0.68": 1,
+    "first_ndcg_ge_0.69": 87
+  },
+  "token_usage": {
+    "calls": 200,
+    "total_tokens": 1911565,
+    "prompt_tokens": 1524327,
+    "completion_tokens": 387238
+  },
+  "checkpoint_used": "checkpoint_200",
+  "log": "openevolve_20261126_161332.log"
+}
